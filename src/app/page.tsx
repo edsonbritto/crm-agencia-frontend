@@ -47,10 +47,24 @@ export default function CRM() {
     setLeads(l => l.map(x => x.id === id ? { ...x, stage } : x))
   }
 
-  const openChat = (lead: any) => {
+  const openChat = async (lead: any) => {
     setActiveContact(lead)
-    setMessages([{ from: 'them', text: `Olá! Sou ${lead.name} da ${lead.company || 'empresa'}.`, time: '10:00' }])
+    setMessages([])
     setView('chat')
+    try {
+      const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+      const res = await fetch(`${API}/api/leads/${lead.id}/messages`)
+      if (res.ok) {
+        const msgs = await res.json()
+        setMessages(msgs.map((m: any) => ({
+          from: m.from,
+          text: m.text,
+          time: new Date(m.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+        })))
+      }
+    } catch(e) {
+      console.error('Erro ao carregar mensagens:', e)
+    }
   }
 
   const sendMsg = async () => {
