@@ -137,7 +137,7 @@ export default function CRM() {
         ))}
         <div style={{flex:1}}/>
         <button onClick={disconnect} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #ef444433',background:'#ef444411',color:'#ef4444',cursor:'pointer',fontSize:12,fontWeight:600,textAlign:'left' as const,marginBottom:4}}>⊗ Desconectar WA</button>
-        <button onClick={() => { document.cookie='crm_auth=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'; window.location.href='/login' }} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #2a2f47',background:'none',color:'#64748b',cursor:'pointer',fontSize:12,fontWeight:600,textAlign:'left' as const}}>↩ Sair</button>
+        <button onClick={async () => { await fetch('/api/logout', {method:'POST'}); window.location.href='/login' }} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #2a2f47',background:'none',color:'#64748b',cursor:'pointer',fontSize:12,fontWeight:600,textAlign:'left' as const}}>↩ Sair</button>
       </div>
 
       {/* Dashboard */}
