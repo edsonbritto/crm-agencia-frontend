@@ -6,15 +6,23 @@ export default function LoginPage() {
   const [user, setUser] = useState('')
   const [pass, setPass] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (user === 'admin' && pass === 'crm2024') {
-      document.cookie = 'crm_auth=ok; path=/; max-age=86400'
+    setLoading(true)
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user, pass })
+    })
+    if (res.ok) {
       router.push('/')
+      router.refresh()
     } else {
       setError('Usuário ou senha incorretos')
+      setLoading(false)
     }
   }
 
@@ -36,7 +44,9 @@ export default function LoginPage() {
             <input type='password' value={pass} onChange={e=>setPass(e.target.value)} placeholder='••••••••' style={{width:'100%',padding:'10px 14px',background:'#0f172a',border:'1px solid #334155',borderRadius:'8px',color:'white',fontSize:'15px',boxSizing:'border-box' as const}}/>
           </div>
           {error && <p style={{color:'#ef4444',fontSize:'13px',marginBottom:'16px',textAlign:'center'}}>{error}</p>}
-          <button type='submit' style={{width:'100%',padding:'12px',background:'#22c55e',border:'none',borderRadius:'8px',color:'white',fontSize:'16px',fontWeight:'bold',cursor:'pointer'}}>Entrar</button>
+          <button type='submit' disabled={loading} style={{width:'100%',padding:'12px',background: loading ? '#166534' : '#22c55e',border:'none',borderRadius:'8px',color:'white',fontSize:'16px',fontWeight:'bold',cursor:'pointer'}}>
+            {loading ? 'Entrando...' : 'Entrar'}
+          </button>
         </form>
         <p style={{color:'#475569',fontSize:'12px',textAlign:'center',marginTop:'24px'}}>usuário: admin · senha: crm2024</p>
       </div>
