@@ -84,6 +84,13 @@ export default function CRM() {
     }
   }
 
+  const disconnect = async () => {
+    if (!confirm('Desconectar o WhatsApp? Precisará escanear o QR Code novamente.')) return
+    const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    await fetch(`${API}/api/disconnect`, { method: 'POST' })
+    alert('WhatsApp desconectado!')
+  }
+
   const totalPipeline = leads.reduce((s, l) => s + (l.value || 0), 0)
 
   const s = {
@@ -105,6 +112,8 @@ export default function CRM() {
         {[['dashboard','▦ Dashboard'],['kanban','⊟ Pipeline'],['contacts','◈ Contatos'],['chat','◉ WhatsApp']].map(([id, label]) => (
           <button key={id} style={s.navBtn(view === id)} onClick={() => setView(id)}>{label}</button>
         ))}
+        <div style={{flex:1}}/>
+        <button onClick={disconnect} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #ef444433',background:'#ef444411',color:'#ef4444',cursor:'pointer',fontSize:12,fontWeight:600,textAlign:'left' as const}}>⊗ Desconectar WA</button>
       </div>
 
       {/* Dashboard */}
