@@ -24,6 +24,8 @@ export default function CRM() {
   const [view, setView] = useState('dashboard')
   const [activeContact, setActiveContact] = useState<any>(null)
   const [msg, setMsg] = useState('')
+  const [qrCode, setQrCode] = useState('')
+  const [waStatus, setWaStatus] = useState('unknown')
   const [messages, setMessages] = useState<any[]>([])
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ name: '', company: '', phone: '', email: '', value: '', tag: '', stage: 'novo' })
@@ -45,6 +47,11 @@ export default function CRM() {
   const mudarStage = async (id: string, stage: string) => {
     await leadsService.atualizar(id, { stage })
     setLeads(l => l.map(x => x.id === id ? { ...x, stage } : x))
+  }
+
+  const openWhatsApp = async () => {
+    setView('chat')
+    await checkWaStatus()
   }
 
   const openChat = async (lead: any) => {
@@ -84,6 +91,22 @@ export default function CRM() {
     }
   }
 
+  const checkWaStatus = async () => {
+    const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    try {
+      const r = await fetch(`${API}/api/whatsapp/status`)
+      const d = await r.json()
+      setWaStatus(d.state)
+      if (d.state !== 'open') {
+        const qr = await fetch(`${API}/api/whatsapp/qr`)
+        const q = await qr.json()
+        if (q.base64) setQrCode(q.base64)
+      } else {
+        setQrCode('')
+      }
+    } catch(e) {}
+  }
+
   const disconnect = async () => {
     if (!confirm('Desconectar o WhatsApp? Precisará escanear o QR Code novamente.')) return
     const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
@@ -109,8 +132,8 @@ export default function CRM() {
       {/* Sidebar */}
       <div style={s.sidebar}>
         <div style={s.logo}>◈ AgênciaCRM</div>
-        {[['dashboard','▦ Dashboard'],['kanban','⊟ Pipeline'],['contacts','◈ Contatos'],['chat','◉ WhatsApp']].map(([id, label]) => (
-          <button key={id} style={s.navBtn(view === id)} onClick={() => setView(id)}>{label}</button>
+        {[['dashboard','▦ Dashboard'],['kanban','⊟ Pipeline'],['contacts','◈ Contatos'],['chat', waStatus === 'open' ? '● WhatsApp' : '○ WhatsApp']].map(([id, label]) => (
+          <button key={id} style={s.navBtn(view === id)} onClick={() => id === 'chat' ? openWhatsApp() : setView(id)}>{label}</button>
         ))}
         <div style={{flex:1}}/>
         <button onClick={disconnect} style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #ef444433',background:'#ef444411',color:'#ef4444',cursor:'pointer',fontSize:12,fontWeight:600,textAlign:'left' as const}}>⊗ Desconectar WA</button>
@@ -230,6 +253,20 @@ export default function CRM() {
       {view === 'chat' && (
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           <div style={{ width: 260, background: '#1a1d27', borderRight: '1px solid #2a2f47', overflowY: 'auto' as const }}>
+            {waStatus !== 'open' && (
+              <div style={{padding:'20px',textAlign:'center',borderBottom:'1px solid #2a2f47'}}>
+                <p style={{color:'#ef4444',fontSize:13,marginBottom:12}}>⚠️ WhatsApp desconectado</p>
+                {qrCode ? (
+                  <div>
+                    <img src={qrCode} style={{width:200,height:200,background:'white',padding:8,borderRadius:8}} alt="QR Code"/>
+                    <p style={{color:'#94a3b8',fontSize:11,marginTop:8}}>Escaneie com o WhatsApp</p>
+                    <button onClick={checkWaStatus} style={{marginTop:8,padding:'6px 12px',background:'#25d366',border:'none',borderRadius:6,color:'white',fontSize:12,cursor:'pointer'}}>Atualizar status</button>
+                  </div>
+                ) : (
+                  <button onClick={checkWaStatus} style={{padding:'8px 16px',background:'#25d366',border:'none',borderRadius:8,color:'white',fontSize:13,cursor:'pointer'}}>Conectar WhatsApp</button>
+                )}
+              </div>
+            )}
             <div style={{ padding: '16px', borderBottom: '1px solid #2a2f47', fontWeight: 600, fontSize: 14 }}>WhatsApp · {leads.length}</div>
             {leads.map((lead, i) => (
               <div key={lead.id} onClick={() => openChat(lead)} style={{ display: 'flex', gap: 10, padding: '10px 14px', borderBottom: '1px solid #2a2f4733', cursor: 'pointer', background: activeContact?.id === lead.id ? '#25d36611' : 'none' }}>
