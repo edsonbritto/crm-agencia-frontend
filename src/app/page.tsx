@@ -53,11 +53,21 @@ export default function CRM() {
     setView('chat')
   }
 
-  const sendMsg = () => {
-    if (!msg.trim()) return
+  const sendMsg = async () => {
+    if (!msg.trim() || !activeContact) return
+    const text = msg
     const now = new Date()
-    setMessages(m => [...m, { from: 'me', text: msg, time: `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}` }])
+    setMessages(m => [...m, { from: 'me', text, time: `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}` }])
     setMsg('')
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/leads/${activeContact.id}/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      })
+    } catch(e) {
+      console.error('Erro ao enviar mensagem:', e)
+    }
   }
 
   const totalPipeline = leads.reduce((s, l) => s + (l.value || 0), 0)
