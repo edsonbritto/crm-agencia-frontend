@@ -18,8 +18,7 @@ export default function LoginPage() {
       body: JSON.stringify({ user, pass })
     })
     if (res.ok) {
-      router.push('/')
-      router.refresh()
+      window.location.href = '/'
     } else {
       setError('Usuário ou senha incorretos')
       setLoading(false)
